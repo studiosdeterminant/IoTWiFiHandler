@@ -12,7 +12,7 @@ import java.util.List;
 
 public class IoTWiFiHandler implements ReactPackage {
 
-    @Override
+    //@Override
     public List<Class<? extends JavaScriptModule>> createJSModules() {
         return Collections.emptyList();
     }
@@ -27,7 +27,7 @@ public class IoTWiFiHandler implements ReactPackage {
             ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
 
-        modules.add(new IoTWiFiHandlerModule(reactContext));
+        modules.add(new Module(reactContext));
 
         return modules;
     }
