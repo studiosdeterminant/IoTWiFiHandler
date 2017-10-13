@@ -101,16 +101,31 @@ public class IoTWifiHandlerModule extends ReactContextBaseJavaModule implements 
 					try {
               if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                   con_manager.setProcessDefaultNetwork(network);
-                  Log.e("Aviator", "Process bound to WiFi network");
+                  Log.i("Aviator", "Process bound to WiFi network");
               } else {
                   con_manager.bindProcessToNetwork(network);
-                  Log.e("Aviator", "Process bound to WiFi network");
+                  Log.i("Aviator", "Process bound to WiFi network");
               }
           } catch (IllegalStateException e) {
               Log.e("Aviator", "ConnectivityManager bind process error ", e);
           }
 				}//end of onAvailable
 		});
+	}
+	
+	@ReactMethod
+  public void unbindProcessToNetwork() {
+			try {
+          if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+              con_manager.setProcessDefaultNetwork(null);
+              Log.i("Aviator", "Process unbounded to WiFi network");
+          } else {
+              con_manager.bindProcessToNetwork(null);
+              Log.i("Aviator", "Process unbounded to WiFi network");
+          }
+      } catch (IllegalStateException e) {
+          Log.e("Aviator", "ConnectivityManager unbind process error ", e);
+      }
 	}
 
 
