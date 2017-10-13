@@ -3,10 +3,10 @@
   "version": "0.0.1",
   "author": "Determinant Studios",
   "private": false,
-  "license": "Unlicense",
+  "license": "BSD",
   "repository": {
     "type": "git",
-    "url": "#"
+    "url": "https://github.com/studiosdeterminant/IoTWifiHandler.git"
   },
   "bugs": {
     "url": "#"
@@ -15,7 +15,10 @@
   "keywords": [
     "react-native",
     "android",
-    "library"
+    "library",
+    "IoT",
+    "Wifi",
+    "Wifi Authentication"
   ],
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
