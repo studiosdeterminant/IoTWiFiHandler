@@ -112,7 +112,7 @@ public class IoTWifiHandlerModule extends ReactContextBaseJavaModule implements 
 				}//end of onAvailable
 		});
 	}
-	
+
 	@ReactMethod
   public void unbindProcessToNetwork() {
 			try {
