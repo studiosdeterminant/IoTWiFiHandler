@@ -9,11 +9,15 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.bridge.Callback;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.content.BroadcastReceiver;
 import android.net.wifi.SupplicantState;
@@ -22,6 +26,13 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.ConnectivityManager;
 import android.os.Build;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.InetAddress;
+import java.util.List;
 
 
 public class IoTWifiHandlerModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
@@ -65,17 +76,110 @@ public class IoTWifiHandlerModule extends ReactContextBaseJavaModule implements 
 
   @ReactMethod
   public void getSSID(final Callback callback) {
-    callback.invoke(getSSID());
+    callback.invoke(connectionInfo("SSID"));
   }
 
-  private String getSSID() {
-
-    WifiInfo wifiInformation = wifiService.getConnectionInfo();
-    String SSID = wifiInformation.getSSID();
-    if (SSID.startsWith("\"") && SSID.endsWith("\"")) {
-      SSID = SSID.substring(1, SSID.length() - 1);
+  @ReactMethod
+  public void getBSSID(final Callback callback) {
+        callback.invoke(connectionInfo("BSSID"));
     }
-    return SSID;
+
+    @ReactMethod
+    public void getRssi(final Callback callback) {
+        callback.invoke(connectionInfo("Rssi"));
+    }
+
+    @ReactMethod
+    public void getRxLinkSpeedMbps(final Callback callback) {
+        callback.invoke(connectionInfo("LinkSpeed"));
+    }
+
+    @ReactMethod
+    public void getIpAddress(final Callback callback) {
+        callback.invoke(connectionInfo("IpAddress"));
+    }
+
+    @ReactMethod
+    public void getFrequency(final Callback callback) {
+        callback.invoke(connectionInfo("Frequency"));
+    }
+
+    @ReactMethod
+    public void isWifiEnabled(final Callback callback) {
+        callback.invoke(wifiService.isWifiEnabled());
+    }
+    @ReactMethod
+    public void getWifiState(final Callback callback) {
+        callback.invoke(wifiService.getWifiState());
+    }
+    @ReactMethod
+    public void getScanResults(final Callback callback) {
+        List<ScanResult> networkList = wifiService.getScanResults();
+        JSONArray wifiList = new JSONArray();
+        for (ScanResult networkInfo: networkList) {
+//            Log.i("Aviator", networkInfo.toString());
+            JSONObject network = new JSONObject();
+//            Skip blank SSID
+            if (networkInfo.SSID.equals("")) continue;
+            try {
+                network.put("BSSID", networkInfo.BSSID);
+                network.put("SSID", networkInfo.SSID);
+                network.put("capabilities", networkInfo.capabilities);
+                network.put("level", networkInfo.level);
+                network.put("frequency", networkInfo.frequency);
+                network.put("timestamp", networkInfo.timestamp);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    network.put("centerFreq0", networkInfo.centerFreq0);
+                    network.put("centerFreq1", networkInfo.centerFreq1);
+                    network.put("channelWidth", networkInfo.channelWidth);
+                    network.put("operatorFriendlyName", networkInfo.operatorFriendlyName);
+                    network.put("venueName", networkInfo.venueName);
+                    network.put("isPasspointNetwork", networkInfo.isPasspointNetwork());
+                }
+                wifiList.put(network);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        callback.invoke(wifiList.toString());
+    }
+
+
+
+//  @TargetApi(Build.VERSION_CODES.Q)
+  @SuppressLint("HardwareIds")
+  private String connectionInfo(String type) {
+    WifiInfo wifiInformation = wifiService.getConnectionInfo();
+    String information = null;
+    switch (type) {
+        case "SSID":
+          information = wifiInformation.getSSID();
+          if (information.startsWith("\"") && information.endsWith("\"")) {
+              information = information.substring(1, information.length() - 1);
+          }
+          break;
+        case "BSSID":
+          information = wifiInformation.getBSSID();
+          break;
+        case "IpAddress":
+//            ToDo: remove deprecated implementation
+            information = Formatter.formatIpAddress(wifiInformation.getIpAddress());
+            Log.i("Aviator", String.valueOf(information));
+            break;
+        case "Frequency":
+            information = String.valueOf(wifiInformation.getFrequency());
+            break;
+        case "Rssi":
+            information = String.valueOf(wifiInformation.getRssi());
+            break;
+        case "LinkSpeed":
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                information = String.valueOf(wifiInformation.getRxLinkSpeedMbps());
+            }
+            break;
+    }
+    return information;
+
   }
 
   private void registerReceiver() {
@@ -138,7 +242,7 @@ public class IoTWifiHandlerModule extends ReactContextBaseJavaModule implements 
     WritableMap event = new WritableNativeMap();
     event.putString("status", supplicantState);
     if(supplicantState.equals("COMPLETED")){
-    	event.putString("ssid", getSSID());
+    	event.putString("ssid", connectionInfo("SSID"));
     }
     return event;
   }

@@ -7,3 +7,4 @@ react-native-system-notification.iml
 .idea/
 android/.idea/
 *.iml
+android/local.properties
